@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PocketGames - Trading Platform</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #120303; color: #fff; min-height: 100vh; display: flex; flex-direction: column; }
+        
+        /* Navbar */
+        header { background: #1a0505; border-bottom: 2px solid #b30000; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; }
+        .logo { font-size: 24px; font-weight: bold; color: #ff1a1a; letter-spacing: 1px; }
+        .user-info { display: flex; align-items: center; gap: 15px; flex-wrap: wrap; }
+        .balance-box { background: #2a0808; padding: 8px 15px; border-radius: 8px; border: 1px solid #ff1a1a; display: flex; align-items: center; gap: 10px; }
+        .currency-select { background: #120303; color: #ff1a1a; border: 1px solid #ff1a1a; padding: 4px 8px; border-radius: 4px; cursor: pointer; }
+        .stats-badge { background: #330000; border: 1px solid #ff3333; padding: 6px 12px; border-radius: 6px; font-size: 13px; color: #ff9999; }
+        
+        /* Auth Screen */
+        .auth-container { display: flex; justify-content: center; align-items: center; flex: 1; padding: 20px; }
+        .auth-card { background: #1a0505; border: 2px solid #ff1a1a; padding: 30px; border-radius: 12px; width: 100%; max-width: 400px; box-shadow: 0 0 20px rgba(255, 0, 0, 0.3); }
+        .auth-card h2 { text-align: center; margin-bottom: 20px; color: #ff3333; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-size: 14px; color: #ff9999; }
+        .form-group input { width: 100%; padding: 10px; background: #120303; border: 1px solid #660000; color: #fff; border-radius: 6px; }
+        .form-group input:focus { border-color: #ff1a1a; outline: none; }
+        .btn { width: 100%; padding: 12px; background: #cc0000; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .btn:hover { background: #ff1a1a; }
+        .switch-auth { text-align: center; margin-top: 15px; font-size: 14px; color: #ccc; cursor: pointer; text-decoration: underline; }
+
+        /* Main Dashboard */
+        .dashboard { display: none; flex-direction: column; flex: 1; padding: 20px; max-width: 1400px; margin: 0 auto; width: 100%; }
+        .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px; }
+        
+        /* Assets Bar */
+        .assets-bar { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 5px; }
+        .asset-btn { background: #1a0505; border: 1px solid #660000; color: #fff; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; white-space: nowrap; }
+        .asset-btn.active { background: #b30000; border-color: #ff1a1a; box-shadow: 0 0 10px rgba(255,0,0,0.4); }
+
+        /* Trading Layout */
+        .trading-layout { display: grid; grid-template-columns: 1fr 350px; gap: 20px; flex: 1; }
+        @media(max-width: 900px) { .trading-layout { grid-template-columns: 1fr; } }
+        
+        .chart-section { background: #1a0505; border: 1px solid #660000; border-radius: 12px; padding: 20px; display: flex; flex-direction: column; }
+        .chart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .chart-canvas-container { flex: 1; background: #120303; border-radius: 8px; position: relative; min-height: 350px; border: 1px solid #330000; overflow: hidden; }
+        
+        /* Timeframes */
+        .timeframe-section { display: flex; gap: 8px; margin: 15px 0; overflow-x: auto; }
+        .tf-btn { background: #2a0808; border: 1px solid #660000; color: #ff9999; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: bold; white-space: nowrap; }
+        .tf-btn.active { background: #ff1a1a; color: #fff; border-color: #ff4d4d; }
+
+        /* Control Panel */
+        .control-section { background: #1a0505; border: 1px solid #660000; border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 15px; }
+        .payout-badge { background: rgba(255, 26, 26, 0.1); border: 1px solid #ff1a1a; color: #ff4d4d; padding: 10px; text-align: center; border-radius: 6px; font-weight: bold; font-size: 16px; }
+        
+        .trade-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: auto; }
+        .btn-call { background: #00b33c; color: white; padding: 15px; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; }
+        .btn-call:hover { background: #00cc44; }
+        .btn-put { background: #cc0000; color: white; padding: 15px; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; }
+        .btn-put:hover { background: #ff1a1a; }
+
+        /* Modals for Deposit / Withdrawal */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); justify-content: center; align-items: center; z-index: 1000; }
+        .modal-content { background: #1a0505; border: 2px solid #ff1a1a; padding: 30px; border-radius: 12px; width: 100%; max-width: 450px; position: relative; }
+        .close-modal { position: absolute; top: 15px; right: 15px; background: none; border: none; color: #ff1a1a; font-size: 20px; cursor: pointer; }
+        .method-select { display: flex; gap: 10px; margin-bottom: 15px; }
+        .method-btn { flex: 1; padding: 10px; background: #120303; border: 1px solid #660000; color: #fff; border-radius: 6px; cursor: pointer; font-size: 12px; }
+        .method-btn.active { border-color: #ff1a1a; background: #330000; }
+
+        footer { text-align: center; padding: 15px; font-size: 12px; color: #666; border-top: 1px solid #220505; margin-top: auto; }
+        .alert-box { padding: 10px; background: #003300; border: 1px solid #00cc44; color: #66ff99; border-radius: 6px; text-align: center; margin-top: 10px; display: none; }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <header>
+        <div class="logo">PocketGames</div>
+        <div class="user-info" id="userInfo" style="display: none;">
+            <div class="stats-badge">Ümumi Qeydiyyat: <span id="totalUsersCount">0</span> nəfər</div>
+            <div><span id="displayEmail" style="color: #ff9999; font-size: 14px;"></span></div>
+            <div class="balance-box">
+                <span>Balans:</span>
+                <span id="displayBalance" style="font-weight: bold; color: #00ff66;">1.00</span>
+                <select class="currency-select" id="currencySelect" onchange="changeCurrency()">
+                    <option value="USD">USD ($)</option>
+                    <option value="AZN">AZN (₼)</option>
+                </select>
+            </div>
+            <button class="btn" style="padding: 6px 12px; width: auto;" onclick="openModal('depositModal')">Depozit</button>
+            <button class="btn" style="padding: 6px 12px; width: auto; background: #660000;" onclick="openModal('withdrawModal')">Çıxarış</button>
+        </div>
+    </header>
+
+    <!-- Auth Section -->
+    <div class="auth-container" id="authContainer">
+        <!-- Login Form -->
+        <div class="auth-card" id="loginCard">
+            <h2>Daxil Ol</h2>
+            <div class="form-group">
+                <label>Gmail</label>
+                <input type="email" id="loginEmail" placeholder="example@gmail.com">
+            </div>
+            <div class="form-group">
+                <label>Şifrə</label>
+                <input type="password" id="loginPassword" placeholder="******">
+            </div>
+            <button class="btn" onclick="handleLogin()">Daxil Ol</button>
+            <div class="switch-auth" onclick="toggleAuth('register')">Hesabın yoxdur? Qeydiyyatdan keç</div>
+        </div>
+
+        <!-- Register Form -->
+        <div class="auth-card" id="registerCard" style="display: none;">
+            <h2>Qeydiyyat</h2>
+            <div class="form-group">
+                <label>Gmail</label>
+                <input type="email" id="regEmail" placeholder="example@gmail.com">
+            </div>
+            <div class="form-group">
+                <label>Şifrə</label>
+                <input type="password" id="regPassword" placeholder="******">
+            </div>
+            <button class="btn" onclick="handleRegister()">Qeydiyyatdan Keç</button>
+            <div class="switch-auth" onclick="toggleAuth('login')">Artıq hesabın var? Daxil ol</div>
+        </div>
+    </div>
+
+    <!-- Dashboard Section -->
+    <div class="dashboard" id="dashboard">
+        <div class="top-bar">
+            <div class="assets-bar">
+                <button class="asset-btn active" onclick="selectAsset(this, 'USDT/TRC20', 1.00)">USDT/TRC20</button>
+                <button class="asset-btn" onclick="selectAsset(this, 'USD/ORC', 1.05)">USD/ORC</button>
+                <button class="asset-btn" onclick="selectAsset(this, 'Dogecoin', 0.12)">Dogecoin</button>
+                <button class="asset-btn" onclick="selectAsset(this, 'Litecoin', 85.50)">Litecoin</button>
+                <button class="asset-btn" onclick="selectAsset(this, 'Euro', 1.08)">Euro</button>
+            </div>
+        </div>
+
+        <div class="trading-layout">
+            <div class="chart-section">
+                <div class="chart-header">
+                    <div>
+                        <h3 id="selectedAssetName">USDT/TRC20</h3>
+                        <span id="currentAssetPrice" style="font-size: 20px; font-weight: bold; color: #00ff66;">1.0000</span>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 5px; font-size: 13px; color: #ff9999;">Müddət seçin:</div>
+                <div class="timeframe-section">
+                    <button class="tf-btn" onclick="selectTimeframe(this, 5)">5 saniyə</button>
+                    <button class="tf-btn" onclick="selectTimeframe(this, 10)">10 saniyə</button>
+                    <button class="tf-btn" onclick="selectTimeframe(this, 30)">30 saniyə</button>
+                    <button class="tf-btn active" onclick="selectTimeframe(this, 60)">1 dəqiqə</button>
+                    <button class="tf-btn" onclick="selectTimeframe(this, 300)">5 dəqiqə</button>
+                    <button class="tf-btn" onclick="selectTimeframe(this, 3600)">1 saat</button>
+                    <button class="tf-btn" onclick="selectTimeframe(this, 18000)">5 saat</button>
+                </div>
+
+                <div class="chart-canvas-container">
+                    <canvas id="tradingChart" style="width: 100%; height: 100%; display: block;"></canvas>
+                </div>
+            </div>
+
+            <div class="control-section">
+                <div class="payout-badge">Gəlirlik: 100%</div>
+                
+                <div class="form-group">
+                    <label>Investisiya Məbləği ($1 - $1000)</label>
+                    <input type="number" id="tradeAmount" value="1" min="1" max="1000">
+                </div>
+
+                <div style="font-size: 13px; color: #ccc;">
+                    Potensial Qazanc: <span id="potentialProfit" style="color: #00ff66; font-weight: bold;">$2.00</span>
+                </div>
+
+                <div class="trade-actions">
+                    <button class="btn-call" onclick="executeTrade('UP')">AL (Yuxarı)</button>
+                    <button class="btn-put" onclick="executeTrade('DOWN')">SAT (Aşağı)</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Deposit Modal -->
+    <div class="modal" id="depositModal">
+        <div class="modal-content">
+            <button class="close-modal" onclick="closeModal('depositModal')">&times;</button>
+            <h3 style="margin-bottom: 15px; color: #ff3333;">Depozit Et</h3>
+            <div class="method-select">
+                <button class="method-btn active" onclick="switchDepMethod('card')">Kart (17-500 AZN)</button>
+                <button class="method-btn" onclick="switchDepMethod('crypto')">USDT (10$-1000$)</button>
+            </div>
+            
+            <div id="depCardDetails" style="font-size: 14px; margin-bottom: 15px; color: #ff9999; background: #120303; padding: 10px; border-radius: 6px;">
+                Kart nömrəsi: <b>4173 8652 2061 1007</b>
+            </div>
+            <div id="depCryptoDetails" style="font-size: 14px; margin-bottom: 15px; color: #ff9999; background: #120303; padding: 10px; border-radius: 6px; display: none;">
+                USDT TRC20 Ünvanı:<br><b style="word-break: break-all; font-size: 12px;">TFZwBx9uGHNAovbwwon7TjsEAY3zhwHRNk</b>
+            </div>
+
+            <div class="form-group">
+                <label>Məbləğ daxil edin</label>
+                <input type="number" id="depAmount" placeholder="Məbləğ">
+            </div>
+            <button class="btn" onclick="submitDeposit()">Təsdiq Et</button>
+            <div class="alert-box" id="depAlert">Sorğu göndərildi, admin tərəfindən yoxlanılır!</div>
+        </div>
+    </div>
+
+    <!-- Withdraw Modal -->
+    <div class="modal" id="withdrawModal">
+        <div class="modal-content">
+            <button class="close-modal" onclick="closeModal('withdrawModal')">&times;</button>
+            <h3 style="margin-bottom: 15px; color: #ff3333;">Çıxarış Et</h3>
+            <div class="method-select">
+                <button class="method-btn active" onclick="switchWdMethod('card')">Kart (50-2500 AZN)</button>
+                <button class="method-btn" onclick="switchWdMethod('crypto')">USDT (25$-5000$)</button>
+            </div>
+            <div class="form-group">
+                <label>Hesab Nömrəsi / Ünvan</label>
+                <input type="text" id="wdAccount" placeholder="Kart və ya cüzdan ünvanı">
+            </div>
+            <div class="form-group">
+                <label>Çıxarılacaq Məbləğ</label>
+                <input type="number" id="wdAmount" placeholder="Məbləğ">
+            </div>
+            <button class="btn" onclick="submitWithdraw()">Təsdiq Et</button>
+            <div class="alert-box" id="wdAlert">Sorğu göndərildi, admin tərəfindən yoxlanılır!</div>
+        </div>
+    </div>
+
+    <footer>
+        © 2026 PocketGames. Bütün hüquqlar qorunur.
+    </footer>
+
+    <script>
+        let currentUser = null;
+        let balance = 1.00; // Başlanğıcda 1$ hədiyyə
+        let currency = 'USD';
+        let currentAsset = 'USDT/TRC20';
+        let assetPrice = 1.00;
+        let selectedTimeframe = 60;
+        let currentDepMethod = 'card';
+        let currentWdMethod = 'card';
+
+        function updateUsersCount() {
+            let users = JSON.parse(localStorage.getItem('pocket_users_list')) || [];
+            document.getElementById('totalUsersCount').innerText = users.length;
+        }
+
+        function handleRegister() {
+            const email = document.getElementById('regEmail').value.trim();
+            const pass = document.getElementById('regPassword').value;
+            if(!email || !pass) { alert('Zəhmət olmasa xanaları doldurun'); return; }
+            
+            let users = JSON.parse(localStorage.getItem('pocket_users_list')) || [];
+            if(users.includes(email)) {
+                alert('Bu gmail artıq qeydiyyatdan keçib!');
+                return;
+            }
+
+            users.push(email);
+            localStorage.setItem('pocket_users_list', JSON.stringify(users));
+            // Qeydiyyatda 1$ hədiyyə balans yazılır
+            localStorage.setItem(email, JSON.stringify({pass, balance: 1.00}));
+            
+            alert('Qeydiyyat uğurlu oldu! 1$ hədiyyə balansınız əlavə olundu. İndi daxil olun.');
+            toggleAuth('login');
+            updateUsersCount();
+        }
+
+        function handleLogin() {
+            const email = document.getElementById('loginEmail').value.trim();
+            const pass = document.getElementById('loginPassword').value;
+            const userData = JSON.parse(localStorage.getItem(email));
+            
+            if(userData && userData.pass === pass) {
+                currentUser = email;
+                balance = userData.balance !== undefined ? userData.balance : 1.00;
+                document.getElementById('displayEmail').innerText = email;
+                document.getElementById('authContainer').style.display = 'none';
+                document.getElementById('dashboard').style.display = 'flex';
+                document.getElementById('userInfo').style.display = 'flex';
+                updateBalanceDisplay();
+                updateUsersCount();
+            } else {
+                alert('Gmail və ya şifrə yanlışdır!');
+            }
+        }
+
+        function toggleAuth(type) {
+            if(type === 'register') {
+                document.getElementById('loginCard').style.display = 'none';
+                document.getElementById('registerCard').style.display = 'block';
+            } else {
+                document.getElementById('loginCard').style.display = 'block';
+                document.getElementById('registerCard').style.display = 'none';
+            }
+        }
+
+        function changeCurrency() {
+            currency = document.getElementById('currencySelect').value;
+            updateBalanceDisplay();
+        }
+
+        function updateBalanceDisplay() {
+            let displayVal = balance;
+            if(currency === 'AZN') displayVal = balance * 1.7;
+            document.getElementById('displayBalance').innerText = displayVal.toFixed(2) + ' ' + (currency === 'USD' ? '$' : '₼');
+        }
+
+        function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+        function switchDepMethod(method) {
+            currentDepMethod = method;
+            document.querySelectorAll('#depositModal .method-btn').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+            if(method === 'card') {
+                document.getElementById('depCardDetails').style.display = 'block';
+                document.getElementById('depCryptoDetails').style.display = 'none';
+            } else {
+                document.getElementById('depCardDetails').style.display = 'none';
+                document.getElementById('depCryptoDetails').style.display = 'block';
+            }
+        }
+
+        function switchWdMethod(method) {
+            currentWdMethod = method;
+            document.querySelectorAll('#withdrawModal .method-btn').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+
+        function submitDeposit() {
+            const amt = parseFloat(document.getElementById('depAmount').value);
+            if(currentDepMethod === 'card' && (amt < 17 || amt > 500)) { alert('Kart depozit limiti: 17 AZN - 500 AZN'); return; }
+            if(currentDepMethod === 'crypto' && (amt < 10 || amt > 1000)) { alert('USDT depozit limiti: 10$ - 1000$'); return; }
+            
+            const alertBox = document.getElementById('depAlert');
+            alertBox.style.display = 'block';
+            setTimeout(() => { alertBox.style.display = 'none'; closeModal('depositModal'); }, 2500);
+        }
+
+        function submitWithdraw() {
+            const amt = parseFloat(document.getElementById('wdAmount').value);
+            if(currentWdMethod === 'card' && (amt < 50 || amt > 2500)) { alert('Kart çıxarış limiti: 50 AZN - 2500 AZN'); return; }
+            if(currentWdMethod === 'crypto' && (amt < 25 || amt > 5000)) { alert('USDT çıxarış limiti: 25$ - 5000$'); return; }
+            
+            const alertBox = document.getElementById('wdAlert');
+            alertBox.style.display = 'block';
+            setTimeout(() => { alertBox.style.display = 'none'; closeModal('withdrawModal'); }, 2500);
+        }
+
+        function selectAsset(btn, assetName, price) {
+            document.querySelectorAll('.asset-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            currentAsset = assetName;
+            assetPrice = price;
+            document.getElementById('selectedAssetName').innerText = assetName;
+            document.getElementById('currentAssetPrice').innerText = assetPrice.toFixed(4);
+        }
+
+        function selectTimeframe(btn, seconds) {
+            document.querySelectorAll('.tf-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            selectedTimeframe = seconds;
+        }
+
+        document.getElementById('tradeAmount').addEventListener('input', function() {
+            let val = parseFloat(this.value) || 0;
+            document.getElementById('potentialProfit').innerText = '$' + (val * 2).toFixed(2);
+        });
+
+        function executeTrade(type) {
+            const amt = parseFloat(document.getElementById('tradeAmount').value);
+            if(amt < 1 || amt > 1000) { alert('Treydinq limiti: 1$ - 1000$'); return; }
+            if(balance < amt) { alert('Balansınızda kifayət qədər vəsait yoxdur! Zəhmət olmasa depozit edin.'); return; }
+
+            balance -= amt;
+            updateBalanceDisplay();
+            
+            setTimeout(() => {
+                const won = Math.random() >= 0.5;
+                if(won) {
+                    balance += amt * 2;
+                    alert(`Təbriklər! Treyd uğurlu oldu. Qazanc: +$${amt}`);
+                } else {
+                    alert(`Təəssüf, treyd uduzuldu: -$${amt}`);
+                }
+                updateBalanceDisplay();
+            }, 3000);
+        }
+
+        const canvas = document.getElementById('tradingChart');
+        const ctx = canvas.getContext('2d');
+        let points = [];
+
+        function initChart() {
+            canvas.width = canvas.parentElement.clientWidth;
+            canvas.height = canvas.parentElement.clientHeight;
+            for(let i=0; i<50; i++) {
+                points.push(assetPrice + (Math.random() - 0.5) * 0.05);
+            }
+        }
+
+        function updateChart() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            let lastP = points[points.length - 1] + (Math.random() - 0.49) * 0.02;
+            points.push(lastP);
+            if(points.length > 50) points.shift();
+
+            assetPrice = lastP;
+            document.getElementById('currentAssetPrice').innerText = assetPrice.toFixed(4);
+
+            let max = Math.max(...points);
+            let min = Math.min(...points);
+            let range = max - min || 1;
+            let h = canvas.height;
+            let w = canvas.width;
+            let step = w / (points.length - 1);
+
+            ctx.beginPath();
+            ctx.strokeStyle = '#ff1a1a';
+            ctx.lineWidth = 2;
+
+            for(let i=0; i<points.length; i++) {
+                let x = i * step;
+                let y = h - ((points[i] - min) / range) * (h - 40) - 20;
+                if(i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+        }
+
+        window.addEventListener('resize', () => {
+            canvas.width = canvas.parentElement.clientWidth;
+            canvas.height = canvas.parentElement.clientHeight;
+        });
+
+        updateUsersCount();
+        initChart();
+        setInterval(updateChart, 1000);
+    </script>
+</body>
+</html>
