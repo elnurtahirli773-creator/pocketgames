@@ -444,4 +444,15 @@
         setInterval(updateChart, 1000);
     </script>
 </body>
-</html>
+</html><div class="online-counter">
+    Onlayn: <span id="onlineCount">330</span> nəfər
+</div>
+
+<script>
+    // Hər 3 saniyədən bir 325 ilə 335 arasında təsadüfi rəqəm göstərir
+    setInterval(function() {
+        let randomCount = Math.floor(Math.random() * (335 - 325 + 1)) + 325;
+        document.getElementById("onlineCount").innerText = randomCount;
+    }, 3000);
+</script>
+
