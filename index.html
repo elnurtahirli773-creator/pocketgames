@@ -78,7 +78,8 @@
     <header>
         <div class="logo">PocketGames</div>
         <div class="user-info" id="userInfo" style="display: none;">
-            <div class="stats-badge">Ümumi Qeydiyyat: <span id="totalUsersCount">0</span> nəfər</div>
+            <div class="stats-badge">Ümumi Qeydiyyat: <span id="totalUsersCount">500</span> nəfər</div>
+
             <div><span id="displayEmail" style="color: #ff9999; font-size: 14px;"></span></div>
             <div class="balance-box">
                 <span>Balans:</span>
@@ -455,4 +456,34 @@
         document.getElementById("onlineCount").innerText = randomCount;
     }, 3000);
 </script>
+<div class="promo-container">
+    <input type="text" id="promoInput" placeholder="Promo-kod yazın...">
+    <button onclick="applyPromo()">Yoxla</button>
+</div>
+<script>
+    // Aktiv promo-kodların siyahısı və məbləğləri
+    const promoCodes = {
+        "POCKET1$": { amount: 1, limit: 5, used: 0 },
+        "BONUS5$": { amount: 5, limit: 10, used: 0 }
+    };
+
+    function applyPromo() {
+        let code = document.getElementById("promoInput").value.trim();
+        
+        if (promoCodes[code]) {
+            let promo = promoCodes[code];
+            if (promo.used < promo.limit) {
+                promo.used++;
+                alert(`Təbriklər! ${promo.amount}$ balansınıza əlavə olundu.`);
+                // Burada balansın artırılması funksiyanızı çağıracaqsınız
+            } else {
+                alert("Bu promo-kodun istifadə limiti bitib!");
+            }
+        } else {
+            alert("Yanlış və ya etibarsız promo-kod!");
+        }
+    }
+</script>
+
+
 
